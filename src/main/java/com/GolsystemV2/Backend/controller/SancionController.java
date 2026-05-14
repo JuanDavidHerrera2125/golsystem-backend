@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/sanciones")
-@CrossOrigin(origins = "*")
 public class SancionController {
 
     @Autowired
@@ -43,6 +42,13 @@ public class SancionController {
 
     @GetMapping("/jugador-equipo-torneo/{jugadorEquipoTorneoId}")
     public ResponseEntity<List<Sancion>> findByJugadorEquipoTorneoId(@PathVariable Long jugadorEquipoTorneoId) {
+        List<Sancion> sanciones = sancionService.findByJugadorEquipoTorneoId(jugadorEquipoTorneoId);
+        return ResponseEntity.ok(sanciones);
+    }
+
+    // Endpoint simplificado para frontend - alias de /jugador-equipo-torneo/{id}
+    @GetMapping("/jugador/{jugadorEquipoTorneoId}")
+    public ResponseEntity<List<Sancion>> findByJugadorId(@PathVariable Long jugadorEquipoTorneoId) {
         List<Sancion> sanciones = sancionService.findByJugadorEquipoTorneoId(jugadorEquipoTorneoId);
         return ResponseEntity.ok(sanciones);
     }
@@ -93,8 +99,30 @@ public class SancionController {
         }
     }
 
+    // Endpoint alternativo para frontend - POST en lugar de PUT
+    @PostMapping("/{id}/cumplir")
+    public ResponseEntity<Sancion> cumplirSancion(@PathVariable Long id) {
+        try {
+            Sancion sancion = sancionService.incrementarFechasCumplidas(id);
+            return ResponseEntity.ok(sancion);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PutMapping("/{id}/desactivar")
     public ResponseEntity<Sancion> desactivarSancion(@PathVariable Long id) {
+        try {
+            Sancion sancion = sancionService.desactivarSancion(id);
+            return ResponseEntity.ok(sancion);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Endpoint alternativo para frontend - POST en lugar de PUT
+    @PostMapping("/{id}/desactivar")
+    public ResponseEntity<Sancion> desactivarSancionPost(@PathVariable Long id) {
         try {
             Sancion sancion = sancionService.desactivarSancion(id);
             return ResponseEntity.ok(sancion);
@@ -106,6 +134,13 @@ public class SancionController {
     @GetMapping("/jugador-equipo-torneo/{jugadorEquipoTorneoId}/torneo/{torneoId}/esta-sancionado")
     public ResponseEntity<Boolean> jugadorEstaSancionado(@PathVariable Long jugadorEquipoTorneoId, @PathVariable Long torneoId) {
         boolean estaSancionado = sancionService.jugadorEstaSancionado(jugadorEquipoTorneoId, torneoId);
+        return ResponseEntity.ok(estaSancionado);
+    }
+
+    // Endpoint simplificado para frontend - verificar sancion con query params
+    @GetMapping("/verificar")
+    public ResponseEntity<Boolean> verificarSancion(@RequestParam Long jugadorId, @RequestParam Long torneoId) {
+        boolean estaSancionado = sancionService.jugadorEstaSancionado(jugadorId, torneoId);
         return ResponseEntity.ok(estaSancionado);
     }
 

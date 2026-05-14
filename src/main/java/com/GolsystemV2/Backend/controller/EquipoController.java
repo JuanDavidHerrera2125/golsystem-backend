@@ -1,25 +1,36 @@
 package com.GolsystemV2.Backend.controller;
 
+import com.GolsystemV2.Backend.dto.EquipoRequestDTO;
 import com.GolsystemV2.Backend.entity.Equipo;
 import com.GolsystemV2.Backend.service.EquipoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/equipos")
-@CrossOrigin(origins = "*")
 public class EquipoController {
 
     @Autowired
     private EquipoService equipoService;
 
     @GetMapping
-    public ResponseEntity<List<Equipo>> findAll() {
-        List<Equipo> equipos = equipoService.findAll();
-        return ResponseEntity.ok(equipos);
+    public ResponseEntity<?> findAll() {
+        try {
+            List<Equipo> equipos = equipoService.findAll();
+            return ResponseEntity.ok(equipos);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error interno del servidor");
+            error.put("message", e.getMessage());
+            error.put("type", e.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     @GetMapping("/{id}")
@@ -43,12 +54,15 @@ public class EquipoController {
     }
 
     @PostMapping
-    public ResponseEntity<Equipo> save(@RequestBody Equipo equipo) {
+    public ResponseEntity<?> save(@RequestBody EquipoRequestDTO equipoDTO) {
         try {
-            Equipo savedEquipo = equipoService.save(equipo);
+            Equipo savedEquipo = equipoService.saveWithTorneo(equipoDTO);
             return ResponseEntity.ok(savedEquipo);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error de validación");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 

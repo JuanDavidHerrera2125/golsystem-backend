@@ -29,6 +29,12 @@ public interface EquipoTorneoService {
     EquipoTorneo eliminarEquipoDelTorneo(Long id);
     
     EquipoTorneo reactivarEquipoEnTorneo(Long id);
-    
+
     boolean validarInscripcionEquipo(Long torneoId, Long equipoId);
+
+    /**
+     * Inscribe un equipo en un torneo de forma directa.
+     * Usado internamente cuando se crea un equipo con torneoId.
+     */
+    EquipoTorneo inscribirEquipoEnTorneo(Long torneoId, Long equipoId);
 }

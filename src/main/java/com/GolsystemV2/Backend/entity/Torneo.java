@@ -2,6 +2,7 @@ package com.GolsystemV2.Backend.entity;
 
 import com.GolsystemV2.Backend.enums.CategoriaTorneo;
 import com.GolsystemV2.Backend.enums.EstadoTorneo;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,7 @@ public class Torneo {
     @Column(nullable = false, length = 100)
     private String nombre;
     
-    @Column(name = "logo_url", length = 500)
+    @Column(name = "logo_url", columnDefinition = "TEXT")
     private String logoUrl;
     
     @Enumerated(EnumType.STRING)
@@ -39,6 +40,28 @@ public class Torneo {
     @Column(nullable = false)
     private EstadoTorneo estado = EstadoTorneo.CONFIGURACION;
     
+    // Nuevos campos para sincronización con frontend
+    @Column(length = 50)
+    private String tipo;
+    
+    @Column(length = 50)
+    private String fase;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "fecha_inicio")
+    private LocalDate fechaInicio;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "fecha_fin")
+    private LocalDate fechaFin;
+    
+    @Column(name = "descripcion", columnDefinition = "TEXT")
+    private String descripcion;
+    
+    @Column(name = "cantidad_grupos")
+    private Integer cantidadDeGrupos;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "fecha_creacion")
     private LocalDate fechaCreacion;
     

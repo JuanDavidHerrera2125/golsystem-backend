@@ -29,4 +29,7 @@ public interface EventoPartidoRepository extends JpaRepository<EventoPartido, Lo
     
     @Query("SELECT ep FROM EventoPartido ep WHERE ep.equipoTorneo.id = :equipoTorneoId ORDER BY ep.encuentro.fecha, ep.minuto")
     List<EventoPartido> findEventosPorEquipo(Long equipoTorneoId);
+
+    @Query("SELECT COUNT(ep) FROM EventoPartido ep WHERE ep.jugadorEquipoTorneo.jugador.id = :jugadorId AND ep.encuentro.fase.torneo.id = :torneoId AND ep.tipoEvento = com.GolsystemV2.Backend.enums.TipoEvento.GOL")
+    Integer countGolesPorJugadorEnTorneo(Long jugadorId, Long torneoId);
 }

@@ -31,4 +31,13 @@ public interface GoleadorHistoricoService {
     GoleadorHistorico actualizarGoles(Long jugadorId, Long equipoId, Long torneoId, Integer totalGoles);
     
     boolean existsByJugadorIdAndTorneoId(Long jugadorId, Long torneoId);
+
+    /**
+     * Recorre todos los jugadores con goles en el torneo y actualiza/crea
+     * sus registros en GoleadorHistorico. Disparado por PhaseManagerService
+     * al cerrar una fase.
+     *
+     * @param torneoId ID del torneo
+     */
+    void registrarGoleadoresDelTorneo(Long torneoId);
 }

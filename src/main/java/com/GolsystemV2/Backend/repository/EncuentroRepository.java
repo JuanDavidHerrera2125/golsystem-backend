@@ -15,6 +15,8 @@ public interface EncuentroRepository extends JpaRepository<Encuentro, Long> {
     
     List<Encuentro> findByFaseIdOrderByFecha(Long faseId);
     
+    List<Encuentro> findByFaseIdOrderByFechaDesc(Long faseId);
+    
     List<Encuentro> findByGrupoIdOrderByFecha(Long grupoId);
     
     List<Encuentro> findByFaseIdAndEstado(Long faseId, EstadoEncuentro estado);

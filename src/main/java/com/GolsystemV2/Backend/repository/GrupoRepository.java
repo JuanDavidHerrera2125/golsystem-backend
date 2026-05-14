@@ -17,4 +17,6 @@ public interface GrupoRepository extends JpaRepository<Grupo, Long> {
     boolean existsByFaseIdAndNombreGrupo(Long faseId, String nombreGrupo);
     
     List<Grupo> findByFaseId(Long faseId);
+    
+    Long countByFaseId(Long faseId);
 }

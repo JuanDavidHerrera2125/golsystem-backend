@@ -1,16 +1,19 @@
 package com.GolsystemV2.Backend.controller;
 
+import com.GolsystemV2.Backend.dto.InscripcionJugadorDTO;
 import com.GolsystemV2.Backend.entity.JugadorEquipoTorneo;
 import com.GolsystemV2.Backend.service.JugadorEquipoTorneoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/jugadores-equipos-torneo")
-@CrossOrigin(origins = "*")
 public class JugadorEquipoTorneoController {
 
     @Autowired
@@ -124,5 +127,36 @@ public class JugadorEquipoTorneoController {
     public ResponseEntity<Boolean> validarLimiteJugadores(@PathVariable Long equipoTorneoId, @PathVariable Long torneoId) {
         boolean puedeInscribirse = jugadorEquipoTorneoService.validarLimiteJugadores(equipoTorneoId, torneoId);
         return ResponseEntity.ok(puedeInscribirse);
+    }
+
+    /**
+     * Endpoint para inscribir un jugador a un equipo en un torneo.
+     * Busca el jugador por documento, lo crea si no existe, y valida reglas de negocio.
+     */
+    @PostMapping("/inscribir")
+    public ResponseEntity<?> inscribirJugador(@RequestBody InscripcionJugadorDTO dto) {
+        try {
+            Map<String, Object> resultado = jugadorEquipoTorneoService.inscribirJugadorCompleto(dto);
+            return ResponseEntity.ok(resultado);
+        } catch (RuntimeException e) {
+            Map<String, String> error = Map.of("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * Busca un jugador por documento de identidad.
+     * Retorna 200 si existe, 404 si no existe.
+     */
+    @GetMapping("/buscar-jugador/{documentoIdentidad}")
+    public ResponseEntity<?> buscarJugadorPorDocumento(@PathVariable String documentoIdentidad) {
+        Optional<Map<String, Object>> jugador = jugadorEquipoTorneoService.buscarJugadorPorDocumento(documentoIdentidad);
+        
+        if (jugador.isPresent()) {
+            return ResponseEntity.ok(jugador.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("mensaje", "Jugador no encontrado con documento: " + documentoIdentidad));
+        }
     }
 }

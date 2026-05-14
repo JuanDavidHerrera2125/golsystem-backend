@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/goleadores-historicos")
-@CrossOrigin(origins = "*")
 public class GoleadorHistoricoController {
 
     @Autowired

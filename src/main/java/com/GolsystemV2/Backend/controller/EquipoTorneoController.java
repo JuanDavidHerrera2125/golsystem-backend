@@ -3,14 +3,17 @@ package com.GolsystemV2.Backend.controller;
 import com.GolsystemV2.Backend.entity.EquipoTorneo;
 import com.GolsystemV2.Backend.service.EquipoTorneoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/equipos-torneo")
-@CrossOrigin(origins = "*")
 public class EquipoTorneoController {
 
     @Autowired
@@ -55,12 +58,20 @@ public class EquipoTorneoController {
     }
 
     @PostMapping
-    public ResponseEntity<EquipoTorneo> save(@RequestBody EquipoTorneo equipoTorneo) {
+    public ResponseEntity<?> save(@RequestBody EquipoTorneo equipoTorneo) {
         try {
             EquipoTorneo savedEquipoTorneo = equipoTorneoService.save(equipoTorneo);
             return ResponseEntity.ok(savedEquipoTorneo);
+        } catch (DataIntegrityViolationException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Equipo duplicado");
+            error.put("message", "El equipo ya está inscrito en este torneo");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error de validación");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 
@@ -117,6 +128,24 @@ public class EquipoTorneoController {
             return ResponseEntity.ok(puedeInscribirse);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PostMapping("/inscribir")
+    public ResponseEntity<?> inscribirEquipoEnTorneo(@RequestParam Long torneoId, @RequestParam Long equipoId) {
+        try {
+            EquipoTorneo savedEquipoTorneo = equipoTorneoService.inscribirEquipoEnTorneo(torneoId, equipoId);
+            return ResponseEntity.ok(savedEquipoTorneo);
+        } catch (DataIntegrityViolationException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Equipo duplicado");
+            error.put("message", "El equipo ya está inscrito en este torneo");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Error de validación");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }
 }

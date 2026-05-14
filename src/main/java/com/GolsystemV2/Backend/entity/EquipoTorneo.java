@@ -26,6 +26,10 @@ public class EquipoTorneo {
     @JoinColumn(name = "equipo_id", nullable = false)
     private Equipo equipo;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grupo_id")
+    private Grupo grupo;
+    
     @Column(nullable = false)
     private Boolean eliminado = false;
     

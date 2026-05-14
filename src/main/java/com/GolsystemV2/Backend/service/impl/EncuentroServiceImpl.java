@@ -1,15 +1,28 @@
 package com.GolsystemV2.Backend.service.impl;
 
 import com.GolsystemV2.Backend.entity.Encuentro;
+import com.GolsystemV2.Backend.entity.EquipoTorneo;
+import com.GolsystemV2.Backend.entity.Grupo;
+import com.GolsystemV2.Backend.entity.Fase;
 import com.GolsystemV2.Backend.enums.EstadoEncuentro;
 import com.GolsystemV2.Backend.repository.EncuentroRepository;
+import com.GolsystemV2.Backend.repository.EquipoTorneoRepository;
+import com.GolsystemV2.Backend.repository.GrupoRepository;
+import com.GolsystemV2.Backend.repository.FaseRepository;
+import com.GolsystemV2.Backend.entity.EventoPartido;
+import com.GolsystemV2.Backend.repository.EventoPartidoRepository;
 import com.GolsystemV2.Backend.service.EncuentroService;
+import com.GolsystemV2.Backend.service.TablaPosicionesService;
+import com.GolsystemV2.Backend.service.GoleadorHistoricoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -18,6 +31,18 @@ public class EncuentroServiceImpl implements EncuentroService {
 
     @Autowired
     private EncuentroRepository encuentroRepository;
+    
+    @Autowired
+    private EquipoTorneoRepository equipoTorneoRepository;
+    
+    @Autowired
+    private GrupoRepository grupoRepository;
+    
+    @Autowired
+    private FaseRepository faseRepository;
+    
+    @Autowired
+    private TablaPosicionesService tablaPosicionesService;
 
     @Override
     @Transactional(readOnly = true)
@@ -154,5 +179,141 @@ public class EncuentroServiceImpl implements EncuentroService {
         
         Encuentro encuentro = encuentroOpt.get();
         return EstadoEncuentro.EN_JUEGO.equals(encuentro.getEstado());
+    }
+    
+    @Override
+    @Transactional
+    public List<Encuentro> generarFixtureGrupo(Long grupoId, String formatoEncuentro) {
+        // 1. Obtener el grupo
+        Grupo grupo = grupoRepository.findById(grupoId)
+                .orElseThrow(() -> new RuntimeException("Grupo no encontrado con ID: " + grupoId));
+        
+        // 2. Obtener equipos del grupo
+        List<EquipoTorneo> equipos = equipoTorneoRepository.findByGrupoIdAndEliminadoFalse(grupoId);
+        
+        if (equipos.size() < 2) {
+            throw new RuntimeException("Se necesitan al menos 2 equipos para generar el fixture");
+        }
+        
+        // 3. Eliminar encuentros existentes del grupo (para regenerar)
+        List<Encuentro> encuentrosExistentes = encuentroRepository.findByGrupoIdOrderByFecha(grupoId);
+        encuentroRepository.deleteAll(encuentrosExistentes);
+        
+        // 3.5. Inicializar tablas de posiciones para cada equipo si no existen
+        for (EquipoTorneo equipo : equipos) {
+            tablaPosicionesService.inicializarTablaParaEquipo(grupoId, equipo.getId());
+        }
+        
+        // 4. Generar todos contra todos
+        List<Encuentro> encuentrosGenerados = new ArrayList<>();
+        int n = equipos.size();
+        
+        // Algoritmo round-robin para generar fixture
+        // SOLO_IDA: cada equipo juega 1 vez contra cada rival
+        // IDA_Y_VUELTA: cada equipo juega 2 veces (ida y vuelta)
+        
+        boolean idaYVuelta = "IDA_Y_VUELTA".equalsIgnoreCase(formatoEncuentro);
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                EquipoTorneo equipoLocal = equipos.get(i);
+                EquipoTorneo equipoVisitante = equipos.get(j);
+                
+                // Partido de ida (i vs j)
+                Encuentro encuentroIda = new Encuentro();
+                encuentroIda.setFase(grupo.getFase());
+                encuentroIda.setGrupo(grupo);
+                encuentroIda.setEquipoLocal(equipoLocal);
+                encuentroIda.setEquipoVisitante(equipoVisitante);
+                encuentroIda.setEstado(EstadoEncuentro.PROGRAMADO);
+                encuentrosGenerados.add(encuentroRepository.save(encuentroIda));
+                
+                if (idaYVuelta) {
+                    // Partido de vuelta (j vs i)
+                    Encuentro encuentroVuelta = new Encuentro();
+                    encuentroVuelta.setFase(grupo.getFase());
+                    encuentroVuelta.setGrupo(grupo);
+                    encuentroVuelta.setEquipoLocal(equipoVisitante);
+                    encuentroVuelta.setEquipoVisitante(equipoLocal);
+                    encuentroVuelta.setEstado(EstadoEncuentro.PROGRAMADO);
+                    encuentrosGenerados.add(encuentroRepository.save(encuentroVuelta));
+                }
+            }
+        }
+        
+        return encuentrosGenerados;
+    }
+    
+    @Override
+    @Transactional
+    public Map<String, Object> generarFixtureFase(Long faseId, String formatoEncuentro) {
+        Fase fase = faseRepository.findById(faseId)
+                .orElseThrow(() -> new RuntimeException("Fase no encontrada con ID: " + faseId));
+        
+        List<Grupo> grupos = grupoRepository.findByFaseId(faseId);
+        Map<String, Object> resultado = new HashMap<>();
+        Map<String, List<Encuentro>> encuentrosPorGrupo = new HashMap<>();
+        int totalEncuentros = 0;
+        
+        for (Grupo grupo : grupos) {
+            List<Encuentro> encuentros = generarFixtureGrupo(grupo.getId(), formatoEncuentro);
+            encuentrosPorGrupo.put(grupo.getNombreGrupo(), encuentros);
+            totalEncuentros += encuentros.size();
+        }
+        
+        resultado.put("fase", fase);
+        resultado.put("encuentrosPorGrupo", encuentrosPorGrupo);
+        resultado.put("totalEncuentros", totalEncuentros);
+        resultado.put("totalGrupos", grupos.size());
+        resultado.put("mensaje", "Fixture generado exitosamente");
+        
+        return resultado;
+    }
+    
+    @Autowired
+    private GoleadorHistoricoService goleadorHistoricoService;
+
+    @Autowired
+    private EventoPartidoRepository eventoPartidoRepository;
+
+    @Override
+    @Transactional
+    public Encuentro registrarResultado(Long encuentroId, Integer golesLocal, Integer golesVisitante) {
+        if (golesLocal == null || golesVisitante == null || golesLocal < 0 || golesVisitante < 0) {
+            throw new RuntimeException("Los goles deben ser números positivos");
+        }
+        
+        Encuentro encuentro = encuentroRepository.findById(encuentroId)
+                .orElseThrow(() -> new RuntimeException("Encuentro no encontrado con ID: " + encuentroId));
+        
+        // Actualizar resultado
+        encuentro.setGolesLocal(golesLocal);
+        encuentro.setGolesVisitante(golesVisitante);
+        encuentro.setEstado(EstadoEncuentro.FINALIZADO);
+        encuentro.setFecha(LocalDateTime.now());
+        
+        Encuentro guardado = encuentroRepository.save(encuentro);
+        
+        // 1. Actualizar tablas de posiciones
+        if (encuentro.getGrupo() != null) {
+            tablaPosicionesService.actualizarTablaTrasResultado(encuentroId);
+        }
+
+        // 2. Actualizar Goleadores Históricos basados en Eventos
+        List<EventoPartido> goles = eventoPartidoRepository.findByEncuentroIdAndTipoEvento(encuentroId, com.GolsystemV2.Backend.enums.TipoEvento.GOL);
+        for (EventoPartido gol : goles) {
+            if (gol.getJugadorEquipoTorneo() != null) {
+                Long jugadorId = gol.getJugadorEquipoTorneo().getJugador().getId();
+                Long equipoId = gol.getEquipoTorneo().getEquipo().getId();
+                Long torneoId = encuentro.getFase().getTorneo().getId();
+                
+                // Contar todos los goles del jugador en este torneo
+                Integer totalGolesTorneo = eventoPartidoRepository.countGolesPorJugadorEnTorneo(jugadorId, torneoId);
+                
+                goleadorHistoricoService.actualizarGoles(jugadorId, equipoId, torneoId, totalGolesTorneo);
+            }
+        }
+        
+        return guardado;
     }
 }

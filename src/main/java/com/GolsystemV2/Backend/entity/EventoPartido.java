@@ -36,6 +36,19 @@ public class EventoPartido {
     @Column(nullable = false)
     private Integer minuto;
     
+    @Column(name = "tipo_gol")
+    private String tipoGol; // NORMAL, PENAL, TIRO_LIBRE, CABEZA, AUTOGOL
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asistencia_id")
+    private JugadorEquipoTorneo asistencia; // Jugador que asistió el gol
+    
+    @Column(name = "motivo_tarjeta")
+    private String motivoTarjeta; // Falta, protesta, etc.
+    
+    @Column(name = "descripcion")
+    private String descripcion; // Descripción del evento
+    
     @Column(name = "created_at", nullable = false, updatable = false)
     private java.time.LocalDateTime createdAt;
     

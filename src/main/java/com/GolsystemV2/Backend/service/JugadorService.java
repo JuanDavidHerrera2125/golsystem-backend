@@ -25,4 +25,8 @@ public interface JugadorService {
     Jugador desactivarJugador(Long id);
     
     Jugador activarJugador(Long id);
+    
+    List<Jugador> findByEquipoTorneoId(Long equipoTorneoId);
+    
+    List<Jugador> findByEquipoId(Long equipoId);
 }

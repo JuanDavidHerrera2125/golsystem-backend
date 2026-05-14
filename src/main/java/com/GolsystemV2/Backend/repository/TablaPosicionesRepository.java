@@ -18,6 +18,8 @@ public interface TablaPosicionesRepository extends JpaRepository<TablaPosiciones
     
     List<TablaPosiciones> findByGrupoIdAndEstado(Long grupoId, EstadoTablaPosiciones estado);
     
+    List<TablaPosiciones> findByGrupoId(Long grupoId);
+    
     @Query("SELECT tp FROM TablaPosiciones tp WHERE tp.grupo.id = :grupoId ORDER BY tp.pts DESC, tp.dg DESC, tp.gf DESC")
     List<TablaPosiciones> findTablaPosicionesOrdenada(Long grupoId);
     

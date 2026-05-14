@@ -8,10 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tablas-posiciones")
-@CrossOrigin(origins = "*")
 public class TablaPosicionesController {
 
     @Autowired
@@ -113,6 +113,25 @@ public class TablaPosicionesController {
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * Inicializa la tabla de posiciones para un equipo en un grupo.
+     * Se usa al generar el fixture para crear las entradas iniciales.
+     */
+    @PostMapping("/inicializar")
+    public ResponseEntity<?> inicializarTablaParaEquipo(
+            @RequestParam Long grupoId,
+            @RequestParam Long equipoTorneoId) {
+        try {
+            TablaPosiciones tabla = tablaPosicionesService.inicializarTablaParaEquipo(grupoId, equipoTorneoId);
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Tabla de posiciones inicializada exitosamente",
+                    "tabla", tabla
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

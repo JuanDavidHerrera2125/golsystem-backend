@@ -116,6 +116,12 @@ public class SancionServiceImpl implements SancionService {
     }
 
     @Override
+    public Sancion crearSancionPorTarjetaRoja(Long jugadorEquipoTorneoId, Long encuentroOrigenId, Long torneoId) {
+        // Crear sanción de 1 partido por tarjeta roja
+        return crearSancion(torneoId, jugadorEquipoTorneoId, encuentroOrigenId, 1);
+    }
+
+    @Override
     public Sancion incrementarFechasCumplidas(Long sancionId) {
         Sancion sancion = sancionRepository.findById(sancionId)
                 .orElseThrow(() -> new RuntimeException("Sancion no encontrada con ID: " + sancionId));

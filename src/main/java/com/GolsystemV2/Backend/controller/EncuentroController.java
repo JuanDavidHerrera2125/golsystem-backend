@@ -5,15 +5,16 @@ import com.GolsystemV2.Backend.enums.EstadoEncuentro;
 import com.GolsystemV2.Backend.service.EncuentroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/encuentros")
-@CrossOrigin(origins = "*")
 public class EncuentroController {
 
     @Autowired
@@ -122,6 +123,62 @@ public class EncuentroController {
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    /**
+     * Genera el fixture de encuentros para un grupo (todos contra todos).
+     */
+    @PostMapping("/generar-fixture/grupo/{grupoId}")
+    public ResponseEntity<?> generarFixtureGrupo(
+            @PathVariable Long grupoId,
+            @RequestParam(defaultValue = "SOLO_IDA") String formato) {
+        try {
+            List<Encuentro> encuentros = encuentroService.generarFixtureGrupo(grupoId, formato);
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Fixture generado exitosamente",
+                    "totalEncuentros", encuentros.size(),
+                    "encuentros", encuentros
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Genera el fixture completo para una fase de grupos.
+     */
+    @PostMapping("/generar-fixture/fase/{faseId}")
+    public ResponseEntity<?> generarFixtureFase(
+            @PathVariable Long faseId,
+            @RequestParam(defaultValue = "SOLO_IDA") String formato) {
+        try {
+            Map<String, Object> resultado = encuentroService.generarFixtureFase(faseId, formato);
+            return ResponseEntity.ok(resultado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    /**
+     * Registra el resultado de un encuentro y actualiza automáticamente la tabla de posiciones.
+     */
+    @PostMapping("/{id}/resultado")
+    public ResponseEntity<?> registrarResultado(
+            @PathVariable Long id,
+            @RequestParam Integer golesLocal,
+            @RequestParam Integer golesVisitante) {
+        try {
+            Encuentro encuentro = encuentroService.registrarResultado(id, golesLocal, golesVisitante);
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "Resultado registrado exitosamente",
+                    "encuentro", encuentro
+            ));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

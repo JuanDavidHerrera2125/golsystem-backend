@@ -2,7 +2,9 @@ package com.GolsystemV2.Backend.service;
 
 import com.GolsystemV2.Backend.entity.Torneo;
 import com.GolsystemV2.Backend.enums.EstadoTorneo;
+import com.GolsystemV2.Backend.enums.FormatoEncuentro;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface TorneoService {
@@ -32,4 +34,16 @@ public interface TorneoService {
     Torneo finalizarTorneo(Long torneoId);
     
     boolean validarInicioTorneo(Long torneoId);
+    
+    Torneo distribuirEquiposEnGrupos(Long torneoId, FormatoEncuentro formatoEncuentro);
+    
+    List<Map<String, Object>> obtenerGruposConEquipos(Long torneoId);
+    
+    List<Map<String, Object>> obtenerFases(Long torneoId);
+    
+    List<Map<String, Object>> obtenerEncuentros(Long torneoId);
+
+    List<Map<String, Object>> obtenerEncuentrosActivos(Long torneoId);
+
+    Map<String, Object> obtenerEstadisticas(Long torneoId);
 }

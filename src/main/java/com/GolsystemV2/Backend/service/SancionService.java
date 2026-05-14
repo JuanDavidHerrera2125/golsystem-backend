@@ -26,6 +26,11 @@ public interface SancionService {
     
     Sancion crearSancion(Long torneoId, Long jugadorEquipoTorneoId, Long encuentroOrigenId, Integer cantidadFechas);
     
+    /**
+     * Crea una sanción automática por tarjeta roja (1 partido de suspensión)
+     */
+    Sancion crearSancionPorTarjetaRoja(Long jugadorEquipoTorneoId, Long encuentroOrigenId, Long torneoId);
+    
     Sancion incrementarFechasCumplidas(Long sancionId);
     
     Sancion desactivarSancion(Long sancionId);

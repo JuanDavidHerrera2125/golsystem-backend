@@ -30,4 +30,22 @@ public interface TablaPosicionesService {
     TablaPosiciones abrirTabla(Long id);
     
     void actualizarEstadisticas(Long grupoId, Long equipoTorneoId, Integer pg, Integer pe, Integer pp, Integer gf, Integer gc, Integer amarillas, Integer rojas);
+    
+    /**
+     * Actualiza la tabla de posiciones automáticamente tras registrar un resultado.
+     * Recalcula todos los valores (PJ, PG, PE, PP, GF, GC, DG, PTS) para ambos equipos.
+     * 
+     * @param encuentroId ID del encuentro con resultado registrado
+     */
+    void actualizarTablaTrasResultado(Long encuentroId);
+    
+    /**
+     * Inicializa la tabla de posiciones para un equipo en un grupo.
+     * Se llama al crear un grupo o al inscribir un equipo.
+     * 
+     * @param grupoId ID del grupo
+     * @param equipoTorneoId ID de la relación equipo-torneo
+     * @return TablaPosiciones creada
+     */
+    TablaPosiciones inicializarTablaParaEquipo(Long grupoId, Long equipoTorneoId);
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
+import com.GolsystemV2.Backend.entity.Equipo;
 
 @Entity
 @Table(name = "jugador")
@@ -40,6 +41,10 @@ public class Jugador {
     
     @Column(name = "updated_at")
     private java.time.LocalDateTime updatedAt;
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "equipo_id", referencedColumnName = "id")
+    private Equipo equipo;
     
     @PrePersist
     protected void onCreate() {

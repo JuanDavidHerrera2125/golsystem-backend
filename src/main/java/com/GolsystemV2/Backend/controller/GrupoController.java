@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/grupos")
-@CrossOrigin(origins = "*")
 public class GrupoController {
 
     @Autowired

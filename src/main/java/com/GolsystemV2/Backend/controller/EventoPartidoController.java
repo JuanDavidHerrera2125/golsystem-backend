@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/eventos-partido")
-@CrossOrigin(origins = "*")
 public class EventoPartidoController {
 
     @Autowired

@@ -24,4 +24,6 @@ public interface JugadorEquipoTorneoRepository extends JpaRepository<JugadorEqui
     
     @Query("SELECT jet FROM JugadorEquipoTorneo jet WHERE jet.jugador.id = :jugadorId AND jet.equipoTorneo.torneo.id = :torneoId AND jet.activo = true")
     Optional<JugadorEquipoTorneo> findJugadorActivoEnTorneo(Long jugadorId, Long torneoId);
+    
+    Optional<JugadorEquipoTorneo> findByJugadorIdAndEquipoTorneoId(Long jugadorId, Long equipoTorneoId);
 }

@@ -1,5 +1,6 @@
 package com.GolsystemV2.Backend.service.impl;
 
+import com.GolsystemV2.Backend.dto.InscripcionJugadorDTO;
 import com.GolsystemV2.Backend.entity.JugadorEquipoTorneo;
 import com.GolsystemV2.Backend.entity.Torneo;
 import com.GolsystemV2.Backend.entity.Jugador;
@@ -13,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -174,5 +177,108 @@ public class JugadorEquipoTorneoServiceImpl implements JugadorEquipoTorneoServic
         Torneo torneo = equipoTorneo.getTorneo();
         
         return jugadoresActuales < torneo.getMaxJugadores();
+    }
+    
+    @Override
+    @Transactional
+    public Map<String, Object> inscribirJugadorCompleto(InscripcionJugadorDTO dto) {
+        Map<String, Object> resultado = new HashMap<>();
+        
+        // 1. Buscar o crear el jugador
+        Jugador jugador;
+        Optional<Jugador> jugadorExistente = jugadorRepository.findByDocumentoIdentidad(dto.getDocumentoIdentidad());
+        
+        if (jugadorExistente.isPresent()) {
+            jugador = jugadorExistente.get();
+            resultado.put("jugadorExistente", true);
+            resultado.put("mensajeJugador", "Jugador encontrado en registro global");
+        } else {
+            // Crear nuevo jugador
+            if (dto.getNombre() == null || dto.getApellido() == null) {
+                throw new RuntimeException("Nombre y apellido son requeridos para crear nuevo jugador");
+            }
+            
+            jugador = new Jugador();
+            jugador.setDocumentoIdentidad(dto.getDocumentoIdentidad());
+            jugador.setNombre(dto.getNombre());
+            jugador.setApellido(dto.getApellido());
+            jugador.setFechaNacimiento(dto.getFechaNacimiento());
+            jugador.setFotoUrl(dto.getFotoUrl());
+            jugador.setActivo(true);
+            
+            jugador = jugadorRepository.save(jugador);
+            resultado.put("jugadorExistente", false);
+            resultado.put("mensajeJugador", "Nuevo jugador creado en registro global");
+        }
+        
+        // 2. Buscar el equipoTorneo
+        EquipoTorneo equipoTorneo = equipoTorneoRepository.findById(dto.getEquipoTorneoId())
+                .orElseThrow(() -> new RuntimeException("EquipoTorneo no encontrado con ID: " + dto.getEquipoTorneoId()));
+        
+        Long torneoId = equipoTorneo.getTorneo().getId();
+        Long jugadorId = jugador.getId();
+        
+        // 3. Validar que el jugador no esté en otro equipo del mismo torneo
+        Optional<JugadorEquipoTorneo> inscripcionExistente = 
+                jugadorEquipoTorneoRepository.findJugadorActivoEnTorneo(jugadorId, torneoId);
+        
+        if (inscripcionExistente.isPresent()) {
+            Long equipoActualId = inscripcionExistente.get().getEquipoTorneo().getId();
+            if (!equipoActualId.equals(dto.getEquipoTorneoId())) {
+                String nombreEquipoActual = inscripcionExistente.get().getEquipoTorneo().getEquipo().getNombre();
+                throw new RuntimeException("El jugador ya está inscrito en otro equipo de este torneo: " + nombreEquipoActual);
+            }
+            throw new RuntimeException("El jugador ya está inscrito en este equipo");
+        }
+        
+        // 4. Validar límites del torneo
+        if (!validarLimiteJugadores(dto.getEquipoTorneoId(), torneoId)) {
+            throw new RuntimeException("El equipo ha alcanzado el límite máximo de jugadores para este torneo");
+        }
+        
+        // 5. Crear la relación JugadorEquipoTorneo
+        JugadorEquipoTorneo jugadorEquipoTorneo = new JugadorEquipoTorneo();
+        jugadorEquipoTorneo.setJugador(jugador);
+        jugadorEquipoTorneo.setEquipoTorneo(equipoTorneo);
+        jugadorEquipoTorneo.setNumeroCamiseta(dto.getNumeroCamiseta());
+        jugadorEquipoTorneo.setActivo(true);
+        
+        JugadorEquipoTorneo guardado = jugadorEquipoTorneoRepository.save(jugadorEquipoTorneo);
+        
+        // 6. Preparar resultado
+        resultado.put("inscripcion", guardado);
+        resultado.put("jugador", jugador);
+        resultado.put("equipo", equipoTorneo.getEquipo());
+        resultado.put("torneo", equipoTorneo.getTorneo());
+        resultado.put("mensaje", "Jugador inscrito exitosamente en el equipo");
+        
+        return resultado;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Map<String, Object>> buscarJugadorPorDocumento(String documentoIdentidad) {
+        Optional<Jugador> jugadorOpt = jugadorRepository.findByDocumentoIdentidad(documentoIdentidad);
+        
+        if (jugadorOpt.isPresent()) {
+            Jugador jugador = jugadorOpt.get();
+            Map<String, Object> resultado = new HashMap<>();
+            resultado.put("id", jugador.getId());
+            resultado.put("documentoIdentidad", jugador.getDocumentoIdentidad());
+            resultado.put("nombre", jugador.getNombre());
+            resultado.put("apellido", jugador.getApellido());
+            resultado.put("fechaNacimiento", jugador.getFechaNacimiento());
+            resultado.put("fotoUrl", jugador.getFotoUrl());
+            resultado.put("activo", jugador.getActivo());
+            return Optional.of(resultado);
+        }
+        
+        return Optional.empty();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<JugadorEquipoTorneo> findByJugadorIdAndEquipoTorneoId(Long jugadorId, Long equipoTorneoId) {
+        return jugadorEquipoTorneoRepository.findByJugadorIdAndEquipoTorneoId(jugadorId, equipoTorneoId);
     }
 }
