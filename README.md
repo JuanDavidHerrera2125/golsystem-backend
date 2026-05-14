@@ -1,6 +1,6 @@
 # GOLSYSTEM ⚽
 
-![JAVA](https://img.shields.io/badge/JAVA-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white) ![SPRING](https://img.shields.io/badge/SPRING-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white) ![MYSQL](https://img.shields.io/badge/MYSQL-%23005C84.svg?style=for-the-badge&logo=mysql&logoColor=white) ![HIBERNATE](https://img.shields.io/badge/HIBERNATE-%2359666C.svg?style=for-the-badge&logo=hibernate&logoColor=white) ![BOOTSTRAP](https://img.shields.io/badge/BOOTSTRAP-%237952B3.svg?style=for-the-badge&logo=bootstrap&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![JAVA](https://img.shields.io/badge/JAVA-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white) ![SPRING](https://img.shields.io/badge/SPRING-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white) ![MYSQL](https://img.shields.io/badge/MYSQL-%23005C84.svg?style=for-the-badge&logo=mysql&logoColor=white) ![HIBERNATE](https://img.shields.io/badge/BOOTSTRAP-%237952B3.svg?style=for-the-badge&logo=bootstrap&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
 
 🏟️ **Plataforma Profesional para la Sistematización de Torneos de Fútbol**
 
